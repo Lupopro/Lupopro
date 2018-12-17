@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+       <title>热门网吧</title>
+       <style type="text/css">
+           .anchorBL  {
+               display:none;
+           }
+           #baiduMap {
+               width:1500px;
+               height:1500px;
+           }
+       </style>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+       <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+       <script src="https://d3js.org/d3.v5.js"></script>
+
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="baiduMap"></div>
+       <p>图&emsp;&emsp;一：<a href="file:///home/lupo/htmlProjects/webbar/index.html" target="_blank">外地人图升级版</a></p>
+       <svg></svg>
+       <script type="text/javascript">
+var dom = document.getElementById("baiduMap");
+var myChart = echarts.init(dom, null, {renderer:"canvas"});
+option = null;
+
+
+/* 读取json数据 */
+d3.json("./热门网吧.json").then(function(dataset){
+    data = [];
+    for (k in dataset){
+        data.push({
+            name:k,
+            value:[dataset[k].lng, dataset[k].lat, dataset[k].value],
+            title:dataset[k].name,
+        })
+    }
+    loadMap(data);
+})
+
+
+function loadMap(infoData){
+    var maxVal = d3.max(data,function(d){
+        return d.value[2];
+    })
+    var minVal = d3.min(data,function(d){
+        return d.value[2];
+    })
+    //得到比例尺
+
+    var scale = d3.scalePow().domain([minVal,maxVal]).range([8,75]);
+    var colorScale = d3.scaleLinear().domain([minVal,maxVal]).range([1,0]);
+    var colorInterpolator = d3.interpolateRdBu;
+    infoData.sort(function (a, b) {
+        return a.value[2] - b.value[2];
+    })
+    for (var i=0; i<infoData.length; i++){
+        infoData[i].rank = infoData.length-i;
+    }
+
+    var color = {
+        topItem:'red',
+        item:'blue',
+        shadow:'black',
+        labelBG:'grey',
+        text:'white',
+        ProvinceBorder:'black'
+    }
+    option = {
+        title: {
+            text: '网吧热门程度',
+            left: 'center'
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: function(d){
+                return d.data.title+
+                    '<br/>流量:'+ d.value[2] +
+                    '<br/>排名:'+ d.data.rank;
+            }
+        },
+        bmap: {
+            center: [107.656929,29.779472],
+            zoom: 9,
+            roam: true,
+            mapStyle: {
+                styleJson: [{
+                    'featureType': 'water',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'land',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#f3f3f3'
+                    }
+                }, {
+                    'featureType': 'railway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'highway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#fdfdfd'
+                    }
+                }, {
+                    'featureType': 'highway',
+                    'elementType': 'labels',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'geometry',
+                    'stylers': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'geometry.fill',
+                    'stylers': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'poi',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'green',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'subway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'manmade',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'local',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'labels',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'boundary',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'building',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'label',
+                    'elementType': 'labels.text.fill',
+                    'stylers': {
+                        'color': '#999999'
+                    }
+                }]
+            }
+        },
+        series : [
+            {
+                name: 'Top 25',
+                type: 'effectScatter',
+                coordinateSystem: 'bmap',
+                data: infoData.slice(infoData.length-25,infoData.length-5),
+                symbolSize: function (val) {
+                    return scale(val[2]);
+                },
+                showEffectOn: 'emphasis',
+                rippleEffect: {
+                    brushType: 'stroke'
+                },
+                hoverAnimation: true,
+                label: {
+                    normal: {
+                        backgroundColor:color.labelBG,
+                        borderRadius: 3,
+                        borderWidth: 1,
+                        shadowColor:'#333',
+                        shadowBlur:15,
+                        fontSize:12,
+                        padding:4,
+                        textShadowColor: '#333',
+                        textShadowBlur:5,
+                        color: color.text,
+                        formatter: function(d){
+                            return "Top" + d.data.rank +"\n" + d.data.title;
+                        },
+                        position: 'right',
+                        offset:[-10,-5],
+                        show:false
+                    },
+                    emphasis:{
+                        show:false
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        color:color.topItem,
+                        // color: function(d){
+                        //     return colorInterpolator(colorScale(d.value[2]));
+                        // },
+                        shadowBlur: 10,
+                        shadowColor: color.shadow
+                    }
+                },
+                zlevel:1
+            },
+            {
+                name: 'Top 5',
+                type: 'effectScatter',
+                coordinateSystem: 'bmap',
+                data: infoData.slice(infoData.length-5,infoData.length),
+                symbolSize: function (val) {
+                    return scale(val[2]);
+                },
+                showEffectOn: 'emphasis',
+                rippleEffect: {
+                    brushType: 'stroke'
+                },
+                hoverAnimation: true,
+                label: {
+                    normal: {
+                        backgroundColor:color.labelBG,
+                        backgroundOpacity:0.5,
+                        borderRadius: 10,
+                        shadowColor:'#333',
+                        shadowBlur:15,
+                        fontSize:12,
+                        padding:4,
+                        color: color.text,
+                        formatter: function(d){
+                            return "Top" + d.data.rank +"\n" + d.data.title;
+                        },
+                        position: 'right',
+                        offset:[-10,-5],
+                        show:true
+                    },
+                    emphasis:{
+                        show:false
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        color:color.topItem,
+                        // color: function(d){
+                        //     return colorInterpolator(colorScale(d.value[2]));
+                        // },
+                        shadowBlur: 10,
+                        shadowColor: color.shadow
+                    }
+                },
+                zlevel:1
+            },
+            {
+                name: '热度',
+                type: 'scatter',
+                coordinateSystem: 'bmap',
+                data: infoData.slice(0,infoData.length-25),
+                symbolSize:function (val) {
+                    return scale(val[2]);
+                },
+                label: {
+                    normal: {
+                        formatter: '{b}',
+                        position: 'right',
+                        show: false
+                    },
+                    emphasis: {
+                        show: false
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        color: color.item,
+                        // color: function(d){
+                        //     return colorInterpolator(colorScale(d.value[2]));
+                        // },
+                        opacity: 0.5
+                    }
+                },
+                zlevel: 0
+            }
+        ]
+    };
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+//重庆边界线
+    var bmap = myChart.getModel().getComponent('bmap').getBMap();
+    getBoundary();
+    function getBoundary(){
+        var bdary = new BMap.Boundary();
+        bdary.get("重庆", function(rs){
+            // 遍历 boundary, 取出多边形点
+            for (var i=0; i < rs.boundaries.length; i++){
+                var ply = new BMap.Polyline(rs.boundaries[i],opts={
+                    strokeWeight:4,
+                    strokeColor:color.ProvinceBorder,
+                    enableClicking:false,
+                });
+                // 添加覆盖物
+                bmap.addOverlay(ply);
+            }
+        })
+    }
+}
+       </script>
+   </body>
+</html>
